@@ -17,7 +17,7 @@ router.post("/register", async (req, res) => {
     // Destructure required fields from req.body
     const { username, email, password, role } = req.body;
 
-    if (role === "admin") {
+    if (role === "admin" || role === "super_admin") {
         const token = req.headers.authorization?.split(" ")[1];
 
         if (!token) {
@@ -31,10 +31,26 @@ router.post("/register", async (req, res) => {
             const decoded = jwt.verify(token, JWT_SECRET);
             const currentUser = await User.findById(decoded.id);
 
-            if (!currentUser || !SUPER_ADMIN_EMAILS.includes(currentUser.email)) {
+            if (!currentUser) {
                 return res.status(403).send({
                     status: "forbidden",
-                    msg: "Seuls les super admins peuvent ajouter d'autres admins."
+                    msg: "Utilisateur non trouve."
+                });
+            }
+
+            // Seuls les super admins peuvent créer d'autres super admins
+            if (role === "super_admin" && !SUPER_ADMIN_EMAILS.includes(currentUser.email)) {
+                return res.status(403).send({
+                    status: "forbidden",
+                    msg: "Seuls les super admins peuvent créer d'autres super admins."
+                });
+            }
+
+            // Les super admins et admins peuvent créer des admins normaux
+            if (role === "admin" && !["admin", "super_admin"].includes(currentUser.role) && !SUPER_ADMIN_EMAILS.includes(currentUser.email)) {
+                return res.status(403).send({
+                    status: "forbidden",
+                    msg: "Seuls les admins peuvent ajouter d'autres admins."
                 });
             }
         } catch (err) {

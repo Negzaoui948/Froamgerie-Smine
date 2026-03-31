@@ -14,9 +14,13 @@ import {
   TableBody,
   Paper,
   CircularProgress,
-  Grid
+  Grid,
+  Card,
+  CardContent,
+  useMediaQuery,
+  useTheme
 } from "@mui/material";
-import { Delete } from "@mui/icons-material";
+import { Delete, AddPhotoAlternate } from "@mui/icons-material";
 import { buildApiUrl } from "../config/api";
 import { resolveMediaUrl } from "../config/media";
 
@@ -29,6 +33,9 @@ const CategoryManager = () => {
   const [message, setMessage] = useState({ text: "", type: "" });
   const [editMode, setEditMode] = useState(false);
   const [editingCategory, setEditingCategory] = useState(null);
+
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
   const fetchCategories = async () => {
     setLoading(true);
@@ -155,9 +162,17 @@ const CategoryManager = () => {
         </Alert>
       )}
 
-      <Box component="form" onSubmit={handleSubmit} sx={{ mb: 4, p: 3, border: "1px solid #ddd", borderRadius: 2, backgroundColor: "#f9f9f9" }}>
-        <Typography variant="h6">{editMode ? "Modifier la catégorie" : "Ajouter une catégorie"}</Typography>
-        <Grid container spacing={2}>
+      <Box component="form" onSubmit={handleSubmit} sx={{
+        mb: 4,
+        p: isMobile ? 2 : 3,
+        border: "1px solid #ddd",
+        borderRadius: 2,
+        backgroundColor: "#f9f9f9"
+      }}>
+        <Typography variant={isMobile ? "h6" : "h6"} sx={{ mb: 2 }}>
+          {editMode ? "Modifier la catégorie" : "Ajouter une catégorie"}
+        </Typography>
+        <Grid container spacing={isMobile ? 1 : 2}>
           <Grid item xs={12} sm={6}>
             <TextField
               label="Nom de la catégorie"
@@ -166,6 +181,7 @@ const CategoryManager = () => {
               fullWidth
               required
               margin="normal"
+              size={isMobile ? "small" : "medium"}
             />
           </Grid>
           <Grid item xs={12} sm={6}>
@@ -175,6 +191,7 @@ const CategoryManager = () => {
               onChange={(e) => setForm({ ...form, description: e.target.value })}
               fullWidth
               margin="normal"
+              size={isMobile ? "small" : "medium"}
             />
           </Grid>
           <Grid item xs={12} sm={6}>
@@ -182,7 +199,8 @@ const CategoryManager = () => {
               variant="outlined"
               component="label"
               fullWidth
-              sx={{ mt: 2, height: 56 }}
+              startIcon={<AddPhotoAlternate />}
+              sx={{ mt: 2, height: isMobile ? 48 : 56 }}
             >
               {editMode ? "Changer l'image" : "Image catégorie (optionnelle)"}
               <input
@@ -193,24 +211,46 @@ const CategoryManager = () => {
               />
             </Button>
             {form.image && (
-              <Typography variant="caption" sx={{ display: 'block', mt: 1 }}>
+              <Typography variant="caption" sx={{ display: 'block', mt: 1, fontSize: isMobile ? '0.7rem' : '0.75rem' }}>
                 Nouveau fichier: {form.image.name}
               </Typography>
             )}
             {editMode && editingCategory?.image && !form.image && (
               <Box sx={{ mt: 1 }}>
-                <Typography variant="caption">Image actuelle:</Typography>
-                <img src={resolveMediaUrl(editingCategory.image)} alt="Current" style={{ maxWidth: '100px', maxHeight: '100px' }} />
+                <Typography variant="caption" sx={{ fontSize: isMobile ? '0.7rem' : '0.75rem' }}>
+                  Image actuelle:
+                </Typography>
+                <img
+                  src={resolveMediaUrl(editingCategory.image)}
+                  alt="Current"
+                  style={{
+                    maxWidth: isMobile ? '80px' : '100px',
+                    maxHeight: isMobile ? '80px' : '100px',
+                    borderRadius: 4,
+                    marginTop: 4
+                  }}
+                  onError={(e) => { e.currentTarget.src = 'https://via.placeholder.com/100'; }}
+                />
               </Box>
             )}
           </Grid>
         </Grid>
-        <Box sx={{ mt: 2 }}>
-          <Button type="submit" variant="contained" sx={{ mr: 1 }}>
+        <Box sx={{ mt: 2, display: 'flex', gap: 1, flexDirection: isMobile ? 'column' : 'row' }}>
+          <Button
+            type="submit"
+            variant="contained"
+            fullWidth={isMobile}
+            sx={{ flex: isMobile ? 'none' : 1 }}
+          >
             {editMode ? "Modifier" : "Créer"}
           </Button>
           {editMode && (
-            <Button variant="outlined" onClick={handleCancelEdit}>
+            <Button
+              variant="outlined"
+              onClick={handleCancelEdit}
+              fullWidth={isMobile}
+              sx={{ flex: isMobile ? 'none' : 'none' }}
+            >
               Annuler
             </Button>
           )}
@@ -224,48 +264,92 @@ const CategoryManager = () => {
       ) : categories.length === 0 ? (
         <Alert severity="info">Aucune catégorie pour le moment.</Alert>
       ) : (
-        <TableContainer component={Paper}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>Nom</TableCell>
-                <TableCell>Description</TableCell>
-                <TableCell>Image</TableCell>
-                <TableCell>Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {categories.map((cat) => (
-                <TableRow key={cat._id}>
-                  <TableCell>{cat.nom}</TableCell>
-                  <TableCell>{cat.description || "-"}</TableCell>
-                  <TableCell>
-                    <img
-                      src={resolveMediaUrl(cat.image)}
-                      alt={cat.nom}
-                      style={{ width: 60, height: 60, objectFit: "cover", borderRadius: 6 }}
-                      onError={(e) => { e.currentTarget.src = "https://via.placeholder.com/60"; }}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Button variant="outlined" size="small" onClick={() => handleEdit(cat)} sx={{ mr: 1 }}>
-                      Modifier
-                    </Button>
-                    <Button
-                      variant="outlined"
-                      color="error"
-                      size="small"
-                      startIcon={<Delete />}
-                      onClick={() => handleDelete(cat._id)}
-                    >
-                      Supprimer
-                    </Button>
-                  </TableCell>
+        isMobile ? (
+          // Vue cartes pour mobile
+          <Grid container spacing={2}>
+            {categories.map((cat) => (
+              <Grid item xs={12} sm={6} key={cat._id}>
+                <Card sx={{ height: '100%' }}>
+                  <CardContent>
+                    <Typography variant="h6" sx={{ mb: 1 }}>{cat.nom}</Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                      {cat.description || "Aucune description"}
+                    </Typography>
+                    {cat.image && (
+                      <Box sx={{ mb: 2 }}>
+                        <img
+                          src={resolveMediaUrl(cat.image)}
+                          alt={cat.nom}
+                          style={{ width: '100%', height: 120, objectFit: 'cover', borderRadius: 8 }}
+                          onError={(e) => { e.currentTarget.src = 'https://via.placeholder.com/200x120'; }}
+                        />
+                      </Box>
+                    )}
+                    <Box sx={{ display: 'flex', gap: 1, flexDirection: 'column' }}>
+                      <Button variant="outlined" size="small" onClick={() => handleEdit(cat)} fullWidth>
+                        Modifier
+                      </Button>
+                      <Button
+                        variant="outlined"
+                        color="error"
+                        size="small"
+                        startIcon={<Delete />}
+                        onClick={() => handleDelete(cat._id)}
+                        fullWidth
+                      >
+                        Supprimer
+                      </Button>
+                    </Box>
+                  </CardContent>
+                </Card>
+              </Grid>
+            ))}
+          </Grid>
+        ) : (
+          // Vue tableau pour desktop
+          <TableContainer component={Paper}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Nom</TableCell>
+                  <TableCell>Description</TableCell>
+                  <TableCell>Image</TableCell>
+                  <TableCell>Actions</TableCell>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+              </TableHead>
+              <TableBody>
+                {categories.map((cat) => (
+                  <TableRow key={cat._id}>
+                    <TableCell>{cat.nom}</TableCell>
+                    <TableCell>{cat.description || "-"}</TableCell>
+                    <TableCell>
+                      <img
+                        src={resolveMediaUrl(cat.image)}
+                        alt={cat.nom}
+                        style={{ width: 60, height: 60, objectFit: "cover", borderRadius: 6 }}
+                        onError={(e) => { e.currentTarget.src = "https://via.placeholder.com/60"; }}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Button variant="outlined" size="small" onClick={() => handleEdit(cat)} sx={{ mr: 1 }}>
+                        Modifier
+                      </Button>
+                      <Button
+                        variant="outlined"
+                        color="error"
+                        size="small"
+                        startIcon={<Delete />}
+                        onClick={() => handleDelete(cat._id)}
+                      >
+                        Supprimer
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        )
       )}
     </Container>
   );

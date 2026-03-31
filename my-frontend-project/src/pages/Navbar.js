@@ -41,7 +41,7 @@ function Navbar({ space }) {
   const name = localStorage.getItem("name");
   const token = localStorage.getItem("token");
   const [menuOpen, setMenuOpen] = useState(false);
-  const whatsappUrl = "https://wa.me/21623463048";
+  const whatsappUrl = "https://wa.me/21620344677";
 
   const currentSpace = space || (location.pathname.startsWith("/admin") ? "admin" : "client");
 
@@ -81,8 +81,8 @@ function Navbar({ space }) {
           { label: "Espace Client", to: "/client/home" }
         ]
       : [
-          { label: "Accueil", to: "/client/home" },
-          { label: "Catalogue", to: "/client/home" },
+         // { label: "Accueil", to: "/client/home" },
+         // { label: "Catalogue", to: "/client/home" },
          // { label: "Paiement", to: "/client/checkout" },
           { label: "Contactez-nous", sectionId: "contact" }
         ];
