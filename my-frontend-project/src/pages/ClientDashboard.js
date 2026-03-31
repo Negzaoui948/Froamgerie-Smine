@@ -17,6 +17,19 @@ function ClientDashboard() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [heroMedia, setHeroMedia] = useState(null);
+
+  useEffect(() => {
+    const storedHero = localStorage.getItem("clientHeroMedia");
+    if (storedHero) {
+      try {
+        setHeroMedia(JSON.parse(storedHero));
+      } catch (err) {
+        console.warn("Impossible de parser clientHeroMedia:", err);
+        setHeroMedia(null);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     if (location.state?.selectedCategoryId) {
@@ -59,7 +72,16 @@ function ClientDashboard() {
   return (
     <main className="client-dashboard-page">
       <section className="client-hero">
-        <div className="client-hero-media" aria-hidden="true" />
+        {heroMedia ? (
+          heroMedia.kind === "video" ? (
+            <video className="client-hero-media" src={heroMedia.src} autoPlay muted loop playsInline />
+          ) : (
+            <img className="client-hero-media" src={heroMedia.src} alt={heroMedia.name || "Visuel client"} />
+          )
+        ) : (
+          <div className="client-hero-media" aria-hidden="true" />
+        )}
+
         <div className="client-hero-overlay" />
 
         <div className="client-hero-content">
