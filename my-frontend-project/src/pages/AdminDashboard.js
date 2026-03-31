@@ -39,12 +39,14 @@ const panels = [
 
 function AdminDashboard() {
   const currentAdminEmail = localStorage.getItem("email") || "";
-  const canCreateAdmin = SUPER_ADMIN_EMAILS.includes(currentAdminEmail);
+  const currentUserRole = localStorage.getItem("role") || "";
+  const canCreateAdmin = SUPER_ADMIN_EMAILS.includes(currentAdminEmail) || currentUserRole === "super_admin" || currentUserRole === "admin";
   const [activePanel, setActivePanel] = useState("");
   const [adminForm, setAdminForm] = useState({
     username: "",
     email: "",
-    password: ""
+    password: "",
+    role: "admin"
   });
   const [adminMessage, setAdminMessage] = useState({ text: "", type: "" });
   const [heroMedia, setHeroMedia] = useState(() => {
@@ -73,11 +75,20 @@ function AdminDashboard() {
         return;
       }
 
+      // Vérifier que seuls les super admins peuvent créer d'autres super admins
+      if (adminForm.role === "super_admin" && !SUPER_ADMIN_EMAILS.includes(currentAdminEmail) && currentUserRole !== "super_admin") {
+        setAdminMessage({
+          text: "Seuls les super admins peuvent créer d'autres super admins.",
+          type: "error"
+        });
+        return;
+      }
+
       const response = await axios.post(
         buildApiUrl("/users/register"),
         {
           ...adminForm,
-          role: "admin"
+          role: adminForm.role
         },
         {
           headers: {
@@ -90,7 +101,7 @@ function AdminDashboard() {
         text: response.data.msg || "Nouvel administrateur cree avec succes.",
         type: "success"
       });
-      setAdminForm({ username: "", email: "", password: "" });
+      setAdminForm({ username: "", email: "", password: "", role: "admin" });
     } catch (error) {
       setAdminMessage({
         text: error.response?.data?.msg || "Impossible de creer le nouvel administrateur.",
@@ -193,6 +204,36 @@ function AdminDashboard() {
                 }
                 required
               />
+            </label>
+
+            <label className="admin-form-field">
+              <span>Type d'administrateur</span>
+              <div className="admin-role-selection">
+                <label className="admin-radio-option">
+                  <input
+                    type="radio"
+                    name="role"
+                    value="admin"
+                    checked={adminForm.role === "admin"}
+                    onChange={(event) =>
+                      setAdminForm({ ...adminForm, role: event.target.value })
+                    }
+                  />
+                  <span>Admin</span>
+                </label>
+                <label className="admin-radio-option">
+                  <input
+                    type="radio"
+                    name="role"
+                    value="super_admin"
+                    checked={adminForm.role === "super_admin"}
+                    onChange={(event) =>
+                      setAdminForm({ ...adminForm, role: event.target.value })
+                    }
+                  />
+                  <span>Super Admin</span>
+                </label>
+              </div>
             </label>
 
             <button className="admin-primary-button" type="submit" disabled={isSubmittingAdmin}>

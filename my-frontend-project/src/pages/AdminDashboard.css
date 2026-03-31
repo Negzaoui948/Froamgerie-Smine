@@ -251,3 +251,42 @@
     border-radius: 22px;
   }
 }
+
+/* Styles pour la sélection du rôle */
+.admin-role-selection {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.admin-radio-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+  border: 2px solid rgba(139, 94, 52, 0.2);
+  border-radius: 12px;
+  background: #fff;
+  transition: all 0.25s ease;
+}
+
+.admin-radio-option:hover {
+  border-color: rgba(212, 163, 115, 0.6);
+  background: rgba(249, 199, 79, 0.05);
+}
+
+.admin-radio-option input[type="radio"] {
+  margin: 0;
+  accent-color: #8b5e34;
+}
+
+.admin-radio-option input[type="radio"]:checked + span {
+  color: #8b5e34;
+  font-weight: 600;
+}
+
+.admin-radio-option span {
+  font-size: 0.9rem;
+  color: #4d331d;
+}
